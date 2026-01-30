@@ -22,6 +22,9 @@ const nextBtn = document.getElementById('nextBtn');
 const todayBtn = document.getElementById('todayBtn');
 const favoritesBtn = document.getElementById('favoritesBtn');
 const favCount = document.getElementById('favCount');
+const favoritesGallery = document.getElementById('favoritesGallery');
+const galleryScroll = document.getElementById('galleryScroll');
+const closeGalleryBtn = document.getElementById('closeGalleryBtn');
 
 // ===== Initialize App =====
 function init() {
@@ -110,9 +113,11 @@ function toggleFavorite() {
     if (index > -1) {
         // Remove from favorites
         favorites.splice(index, 1);
+        showToast('Removed from favorites');
     } else {
         // Add to favorites
         favorites.push(currentQuote);
+        showToast('Added to favorites! ✨');
     }
     
     saveFavorites();
@@ -147,12 +152,66 @@ function showFavorites() {
         return;
     }
     
-    currentMode = 'favorites';
-    // Find the first favorite in the main quotes array
-    const firstFav = favorites[0];
-    currentQuoteIndex = quotes.findIndex(q => q.text === firstFav.text);
-    displayQuote(currentQuoteIndex);
+    // Show the gallery
+    favoritesGallery.style.display = 'flex';
+    renderFavoritesGallery();
     closeMenu();
+}
+
+function renderFavoritesGallery() {
+    galleryScroll.innerHTML = '';
+    
+    favorites.forEach((quote, index) => {
+        const miniCard = document.createElement('div');
+        miniCard.className = 'mini-card';
+        
+        miniCard.innerHTML = `
+            <div class="mini-card-quote">"${quote.text}"</div>
+            <div class="mini-card-author">— ${quote.author}</div>
+            <button class="mini-card-remove" data-index="${index}" aria-label="Remove from favorites">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        `;
+        
+        // Click to view full quote
+        miniCard.addEventListener('click', (e) => {
+            if (!e.target.closest('.mini-card-remove')) {
+                const quoteIndex = quotes.findIndex(q => q.text === quote.text);
+                currentQuoteIndex = quoteIndex;
+                displayQuote(currentQuoteIndex);
+                closeFavoritesGallery();
+            }
+        });
+        
+        // Remove button
+        const removeBtn = miniCard.querySelector('.mini-card-remove');
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeFavorite(index);
+        });
+        
+        galleryScroll.appendChild(miniCard);
+    });
+}
+
+function removeFavorite(index) {
+    favorites.splice(index, 1);
+    saveFavorites();
+    updateFavoriteCount();
+    renderFavoritesGallery();
+    
+    // If no favorites left, close gallery
+    if (favorites.length === 0) {
+        closeFavoritesGallery();
+        showToast('All favorites cleared!');
+    }
+}
+
+function closeFavoritesGallery() {
+    favoritesGallery.style.display = 'none';
 }
 
 // ===== Share Function =====
@@ -278,6 +337,7 @@ function attachEventListeners() {
     });
     
     favoritesBtn.addEventListener('click', showFavorites);
+    closeGalleryBtn.addEventListener('click', closeFavoritesGallery);
     
     // Touch events for swipe
     quoteCard.addEventListener('touchstart', handleTouchStart, { passive: true });

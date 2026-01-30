@@ -36,6 +36,22 @@
             </button>
         </header>
 
+        <!-- Favorites Gallery (hidden by default) -->
+        <div class="favorites-gallery" id="favoritesGallery" style="display: none;">
+            <div class="gallery-header">
+                <h2 class="gallery-title">✨ Your Favorites</h2>
+                <button class="close-gallery-btn" id="closeGalleryBtn" aria-label="Close favorites">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="gallery-scroll" id="galleryScroll">
+                <!-- Mini cards will be inserted here dynamically -->
+            </div>
+        </div>
+
         <!-- Main Quote Display -->
         <main class="quote-container" id="quoteContainer">
             <div class="quote-card" id="quoteCard">
