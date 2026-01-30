@@ -475,5 +475,205 @@ const quotes = [
     {
         text: "Start where you are. Use what you have. Do what you can.",
         author: "Arthur Ashe"
+    },
+    {
+        text: "Yesterday ended last night. Today is a brand new currency.",
+        author: "Unknown"
+    },
+    {
+        text: "Do not carry heavy baggage into a brand new morning.",
+        author: "Unknown"
+    },
+    {
+        text: "The sun is new each day; your mindset can be too.",
+        author: "Unknown"
+    },
+    {
+        text: "You don’t have to be who you were yesterday.",
+        author: "Unknown"
+    },
+    {
+        text: "Today is a non-renewable resource. Spend it well.",
+        author: "Unknown"
+    },
+    {
+        text: "Wake up with purpose, or you’ll wake up with worry.",
+        author: "Unknown"
+    },
+    {
+        text: "Forgive yourself for yesterday so you can conquer today.",
+        author: "Unknown"
+    },
+    {
+        text: "This morning is an invitation to begin again.",
+        author: "Unknown"
+    },
+    {
+        text: "Take a breath. The past is a memory; the future is a wish; this moment is real.",
+        author: "Unknown"
+    },
+    {
+        text: "Open your eyes and choose to be present before you choose to be productive.",
+        author: "Unknown"
+    },
+    {
+        text: "Be the energy you want to attract today.",
+        author: "Unknown"
+    },
+    {
+        text: "Excellence is not an act, but a habit.",
+        author: "Aristotle"
+    },
+    {
+        text: "Don’t lower your standards to fit in; make the world rise to meet you.",
+        author: "Unknown"
+    },
+    {
+        text: "Integrity is doing the right thing when no one is watching.",
+        author: "C.S. Lewis"
+    },
+    {
+        text: "Today, be the reason someone believes in good people.",
+        author: "Unknown"
+    },
+    {
+        text: "Act with the confidence of someone who has nothing to prove.",
+        author: "Unknown"
+    },
+    {
+        text: "Small acts of discipline today build the empire of tomorrow.",
+        author: "Unknown"
+    },
+    {
+        text: "Choose what is right over what is easy.",
+        author: "Roy T. Bennett"
+    },
+    {
+        text: "Your attitude is the first thing people notice. Wear a good one.",
+        author: "Unknown"
+    },
+    {
+        text: "Speak to yourself today like you would speak to a friend.",
+        author: "Brené Brown"
+    },
+    {
+        text: "Focus on the step in front of you, not the whole staircase.",
+        author: "Martin Luther King Jr."
+    },
+    {
+        text: "Progress is quiet. Don’t mistake silence for stagnation.",
+        author: "Unknown"
+    },
+    {
+        text: "You can do anything, but you can’t do everything.",
+        author: "David Allen"
+    },
+    {
+        text: "A river cuts through rock not because of its power, but its persistence.",
+        author: "Jim Watkins"
+    },
+    {
+        text: "Do not starve your future to feed your distraction.",
+        author: "Unknown"
+    },
+    {
+        text: "Action cures fear.",
+        author: "Douglas Horton"
+    },
+    {
+        text: "1% better today is enough.",
+        author: "James Clear"
+    },
+    {
+        text: "Don’t count the hours; make the hours count.",
+        author: "Muhammad Ali"
+    },
+    {
+        text: "The gap between thinking and doing is where anxiety lives.",
+        author: "Unknown"
+    },
+    {
+        text: "Your time is expensive. Don’t spend it on things that don’t pay you back.",
+        author: "Unknown"
+    },
+    {
+        text: "Control what you can, accept what you can’t.",
+        author: "Epictetus"
+    },
+    {
+        text: "No one can annoy you without your permission.",
+        author: "Eleanor Roosevelt"
+    },
+    {
+        text: "Peace is not the absence of trouble, but the presence of calm in the midst of it.",
+        author: "Unknown"
+    },
+    {
+        text: "Be a thermostat, not a thermometer.",
+        author: "Martin Luther King Jr."
+    },
+    {
+        text: "Taking nothing personally is a superpower.",
+        author: "Don Miguel Ruiz"
+    },
+    {
+        text: "A quiet mind is able to hear intuition over fear.",
+        author: "Unknown"
+    },
+    {
+        text: "Difficult roads often lead to beautiful destinations.",
+        author: "Zig Ziglar"
+    },
+    {
+        text: "The obstacle is the way.",
+        author: "Ryan Holiday"
+    },
+    {
+        text: "You have survived 100% of your bad days.",
+        author: "Unknown"
+    },
+    {
+        text: "Do not let the behavior of others destroy your inner peace.",
+        author: "Dalai Lama"
+    },
+    {
+        text: "Stay hungry, stay humble.",
+        author: "Unknown"
+    },
+    {
+        text: "Create before you consume.",
+        author: "Marie Forleo"
+    },
+    {
+        text: "Eyes forward, heart open.",
+        author: "Unknown"
+    },
+    {
+        text: "Less impressing, more expressing.",
+        author: "Unknown"
+    },
+    {
+        text: "Inhale confidence, exhale doubt.",
+        author: "Unknown"
+    },
+    {
+        text: "Today is yours to shape.",
+        author: "Unknown"
+    },
+    {
+        text: "Be a voice, not an echo.",
+        author: "Albert Einstein"
+    },
+    {
+        text: "Mindset is everything.",
+        author: "Unknown"
+    },
+    {
+        text: "Own your morning, own your day.",
+        author: "Robin Sharma"
+    },
+    {
+        text: "Make today a masterpiece.",
+        author: "John Wooden"
     }
 ];

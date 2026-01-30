@@ -16,12 +16,11 @@ const closeMenuBtn = document.getElementById('closeMenuBtn');
 const overlay = document.getElementById('overlay');
 const favoriteBtn = document.getElementById('favoriteBtn');
 const shareBtn = document.getElementById('shareBtn');
-const randomBtn = document.getElementById('randomBtn');
+const newQuoteBtn = document.getElementById('newQuoteBtn');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 const todayBtn = document.getElementById('todayBtn');
 const favoritesBtn = document.getElementById('favoritesBtn');
-const browseBtn = document.getElementById('browseBtn');
 const favCount = document.getElementById('favCount');
 
 // ===== Initialize App =====
@@ -270,7 +269,7 @@ function attachEventListeners() {
     // Actions
     favoriteBtn.addEventListener('click', toggleFavorite);
     shareBtn.addEventListener('click', shareQuote);
-    randomBtn.addEventListener('click', showRandomQuote);
+    newQuoteBtn.addEventListener('click', showRandomQuote);
     
     // Menu items
     todayBtn.addEventListener('click', () => {
@@ -279,13 +278,6 @@ function attachEventListeners() {
     });
     
     favoritesBtn.addEventListener('click', showFavorites);
-    
-    browseBtn.addEventListener('click', () => {
-        currentMode = 'browse';
-        currentQuoteIndex = 0;
-        displayQuote(currentQuoteIndex);
-        closeMenu();
-    });
     
     // Touch events for swipe
     quoteCard.addEventListener('touchstart', handleTouchStart, { passive: true });
