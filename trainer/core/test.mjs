@@ -294,6 +294,17 @@ test('log_weight parses free text and reports a trend, not the raw number', () =
   assert.ok(dispatch(s, 'log_weight', { value: 'banana' }).error);
 });
 
+test('a real weight trend reports ready, with a rate the caller can read', () => {
+  const s = emptyState();
+  for (let i = 0; i < 25; i++) {
+    dispatch(s, 'log_weight', { value: `${(198 - i * 0.15).toFixed(1)} lb`, date: asOf(i) });
+  }
+  const { rate, trendLb } = dispatch(s, 'get_status', {}).weight;
+  assert.equal(rate.ready, true, 'the ready flag must survive the success branch');
+  assert.ok(rate.lbPerWeek < 0, `expected a loss, got ${rate.lbPerWeek}`);
+  assert.ok(trendLb > 190 && trendLb < 198);
+});
+
 test('tools reject unknown ids and unknown names instead of throwing', () => {
   const s = emptyState();
   assert.ok(dispatch(s, 'check_in', { commitment_id: 'nope', status: 'done' }).error);

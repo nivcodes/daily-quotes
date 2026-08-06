@@ -8,27 +8,46 @@ missing feature.
 ```bash
 cd trainer
 npm install
+
+# No API key needed for any of these:
+npm test                            # 77 tests, no network
+node cli.mjs demo                   # seed six weeks of history and show what it finds
+node cli.mjs status                 # local summary of your real data
+
+# Talking to it needs a key:
 export ANTHROPIC_API_KEY=...        # console.anthropic.com
 node cli.mjs                        # talk to it
-node cli.mjs status                 # local summary, no API call, no cost
 node cli.mjs nudge                  # one check-in message (cron-friendly)
-npm test                            # 76 tests, no network, no key needed
 ```
+
+`demo` writes to `~/.trainer/demo.json`, separate from your real data, so you can
+poke at it freely. To hold a conversation against the demo history:
+`TRAINER_DATA=~/.trainer/demo.json node cli.mjs`
 
 Data lives in one JSON file at `~/.trainer/data.json` (`TRAINER_DATA` to override) —
 inspectable, editable, trivially backed up, no database to stand up.
 
 ```
-$ node cli.mjs status
+$ node cli.mjs demo
 
 2026-08-06
+  ✓ walk after dinner (daily)
+      42 in a row  ·  100% of 14
   · gym (Tue/Thu)
       no streak  ·  50% of 4
-  ✓ walk after dinner (daily)
-      28 in a row  ·  100% of 14
+  · no snacking after 9pm (daily)
+      no streak  ·  29% of 14
+  · stretch 10 minutes (daily)
+      no streak  ·  0% of 14
+    meal prep on Sundays (1x/week)
+      1 in a row  ·  33% of 3
+
+  192.6 lb trend  ·  -1.13 lb/wk over 21 days
 
 Worth noticing
-  • "gym" gets missed on Thursdays — 4 of 4.
+  • "meal prep on Sundays" has been revised down 2 times.
+  • "stretch 10 minutes" hasn't been mentioned in 10 due days.
+  • "no snacking after 9pm" went from 86% to 29% over the last two weeks.
 ```
 
 ## Why this shape
@@ -115,12 +134,12 @@ single-file personal tool, owning ~25 lines beats taking a beta dependency.
 
 ## Tests
 
-76, no network and no API key required.
+77, no network and no API key required.
 
 - `engine/test.mjs` (38) — the numeric core carried over from the original design:
   BMR/TDEE, calorie floors and deficit caps, weight EMA, plateau detection, screening
   gates. Most of it is dormant in this build; the floors and trend maths are live.
-- `core/test.mjs` (30) — cadence and due-dates, streaks (including that `skipped` is
+- `core/test.mjs` (31) — cadence and due-dates, streaks (including that `skipped` is
   neutral in both directions — that was a real bug the test caught), adherence
   minimums, every pattern detector including its refusal cases, tool dispatch.
 - `core/loop.test.mjs` (8) — the agentic loop against a stubbed client: tool dispatch,

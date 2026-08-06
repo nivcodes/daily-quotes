@@ -9,6 +9,8 @@
 
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout, argv, exit } from 'node:process';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 import { createSession } from './channels/adapter.mjs';
 import { CADENCE } from './core/accountability.mjs';
 import { WEEKDAY_NAMES } from './core/days.mjs';
@@ -41,6 +43,13 @@ function printStatus(status) {
     console.log(`  ${mark} ${item.text} ${c.dim(`(${describeCadence(item.cadence)})`)}`);
     console.log(`      ${streak}  ${c.dim('·')}  ${rate}`);
   }
+  if (status.weight?.entries > 0) {
+    const { trendLb, rate } = status.weight;
+    const move = rate.ready
+      ? `${rate.lbPerWeek > 0 ? '+' : ''}${rate.lbPerWeek} lb/wk over ${rate.overDays} days`
+      : c.dim('trend not established yet');
+    console.log(`\n  ${c.bold(`${trendLb} lb`)} ${c.dim('trend')}  ${c.dim('·')}  ${move}`);
+  }
   if (status.observations.length > 0) {
     console.log(c.bold('\nWorth noticing'));
     for (const o of status.observations.slice(0, 3)) console.log(`  ${c.yellow('•')} ${o.text}`);
@@ -50,6 +59,24 @@ function printStatus(status) {
 
 async function main() {
   const command = argv[2];
+
+  if (command === 'demo') {
+    const { buildDemoState } = await import('./core/demo.mjs');
+    const { save } = await import('./core/store.mjs');
+    const { summary } = await import('./core/accountability.mjs');
+    const { observations } = await import('./core/patterns.mjs');
+    const { weightSummary } = await import('./core/tools.mjs');
+
+    const path = join(homedir(), '.trainer', 'demo.json');
+    const state = buildDemoState();
+    save(state, path);
+
+    printStatus({ ...summary(state), observations: observations(state), weight: weightSummary(state) });
+    console.log(c.dim(`seeded six weeks at ${path}`));
+    console.log(c.dim(`talk to it with:  TRAINER_DATA=${path} node cli.mjs\n`));
+    return;
+  }
+
   let session;
   try {
     session = createSession();

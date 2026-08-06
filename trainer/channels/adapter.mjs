@@ -14,6 +14,7 @@ import { load, save, DEFAULT_PATH } from '../core/store.mjs';
 import { respond, nudge as coachNudge, createClient } from '../core/coach.mjs';
 import { summary } from '../core/accountability.mjs';
 import { observations } from '../core/patterns.mjs';
+import { weightSummary } from '../core/tools.mjs';
 
 export function createSession({ dataPath = DEFAULT_PATH, client } = {}) {
   const state = load(dataPath);
@@ -41,7 +42,7 @@ export function createSession({ dataPath = DEFAULT_PATH, client } = {}) {
 
     /** Local read — no API call, no cost. Useful for a `/status` command. */
     status() {
-      return { ...summary(state), observations: observations(state) };
+      return { ...summary(state), observations: observations(state), weight: weightSummary(state) };
     },
 
     save: persist,

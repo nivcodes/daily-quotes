@@ -200,7 +200,7 @@ export function dispatch(state, name, input) {
   }
 }
 
-function weightSummary(state) {
+export function weightSummary(state) {
   if (state.weights.length === 0) return { entries: 0 };
   const smoothed = smoothWeights(state.weights);
   const latest = smoothed[smoothed.length - 1];
@@ -210,7 +210,7 @@ function weightSummary(state) {
     trendLb: Number(kgToLb(latest.trendKg).toFixed(1)),
     // Deliberately not the raw latest reading — see log_weight's description.
     rate: rate?.ready
-      ? { lbPerWeek: Number(kgToLb(rate.kgPerWeek).toFixed(2)), overDays: rate.spanDays }
+      ? { ready: true, lbPerWeek: Number(kgToLb(rate.kgPerWeek).toFixed(2)), overDays: rate.spanDays }
       : { ready: false, reason: rate?.reason ?? 'no_data' },
   };
 }
