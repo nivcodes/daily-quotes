@@ -1,0 +1,17 @@
+{
+  "name": "trainer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A text-based accountability partner. Personal use.",
+  "type": "module",
+  "bin": { "trainer": "./cli.mjs" },
+  "scripts": {
+    "start": "node cli.mjs",
+    "nudge": "node cli.mjs nudge",
+    "status": "node cli.mjs status",
+    "test": "node engine/test.mjs && node core/test.mjs && node core/loop.test.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0"
+  }
+}

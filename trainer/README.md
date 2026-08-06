@@ -1,297 +1,142 @@
-# Text-based AI coach — MVP design
+# An accountability partner that lives in a text conversation
 
-A weight-management coach that lives entirely in SMS/WhatsApp. You text it what you
-ate, it texts you back. No app to open, no database to search, no barcode to scan.
+Personal use. You tell it what you're going to do; it remembers, asks, and notices
+things about you that you can't see from the inside. It does **not** prescribe diets,
+calorie targets, or training programmes — that's a deliberate scope choice, not a
+missing feature.
 
-The working prototype of the numeric core is in `engine/` — run `node engine/test.mjs`.
+```bash
+cd trainer
+npm install
+export ANTHROPIC_API_KEY=...        # console.anthropic.com
+node cli.mjs                        # talk to it
+node cli.mjs status                 # local summary, no API call, no cost
+node cli.mjs nudge                  # one check-in message (cron-friendly)
+npm test                            # 76 tests, no network, no key needed
+```
 
----
+Data lives in one JSON file at `~/.trainer/data.json` (`TRAINER_DATA` to override) —
+inspectable, editable, trivially backed up, no database to stand up.
 
-## Where I'd push back
+```
+$ node cli.mjs status
 
-You asked for pushback, so this goes first. Three of these are about the goal-body
-photo, because that feature is simultaneously the best hook in the product and the
-one that can hurt people.
+2026-08-06
+  · gym (Tue/Thu)
+      no streak  ·  50% of 4
+  ✓ walk after dinner (daily)
+      28 in a row  ·  100% of 14
 
-### 1. "Send a pic of your goal body" is the right hook and the wrong mechanic
+Worth noticing
+  • "gym" gets missed on Thursdays — 4 of 4.
+```
 
-The instinct is right: nobody is motivated by "lose 15 lb," everybody is motivated by
-a picture. And asking for it is a genuinely great first interaction — it takes two
-seconds and it tells you more about what someone wants than five survey questions.
+## Why this shape
 
-The problem is what products normally *do* with it. Store it, show it back, put it next
-to a photo of the user, use it as the progress bar. That is the exact mechanic of
-thinspo — a reference body you are measured against daily — and the population that
-most wants a goal-body feature overlaps heavily with the population at risk for
-disordered eating. Building the comparison loop is how a diet app becomes a trigger.
+The original design (kept in [`DESIGN.md`](DESIGN.md)) was a full nutrition coach:
+TDEE, macro splits, goal-photo calibration, screening. The pivot to accountability-only
+is the better product, and not just for liability reasons — adherence, not knowledge,
+is where weight management actually fails. Everyone already knows to eat less. Almost
+nobody has someone who remembers what they said on Tuesday.
 
-There's a second problem that's just as fatal commercially: most goal photos are
-unreachable. They're lean *and* muscular *and* well-lit *and* often enhanced. The
-user reads that as "a diet." It's usually a multi-year project where the dominant
-term is muscle they don't have yet, not fat they need to lose. Someone who sets an
-impossible target quits around week six, and they blame themselves.
+So the system's job is to **notice, remember, and ask**. Less "your target is 2,022
+kcal", more "you said Tuesday was gym day, that's twice now — what's actually in the
+way?"
 
-**What I'd build instead:** keep the photo intake, change its job. The photo is
-consumed *once*, to calibrate expectations, then discarded. It is never stored, never
-shown again, and never displayed next to the user's body. What persists is a text
-target and a 12-week milestone.
+## What it does
 
-Concretely, for a 5'11" 220 lb man who sends a lean-athletic reference photo, the
-engine (`calibrateGoal`) produces:
+- **Commitments** in your own words, with a cadence: daily, specific weekdays, or
+  N-times-a-week. It records them when you mention them; there's no form to fill in.
+- **Check-ins** in any phrasing. "Went this morning" is a done. `skipped` exists for
+  genuine interruptions and is neutral — it neither extends nor breaks a streak,
+  because a system that punishes a real sick day teaches you to lie to it.
+- **Streaks and adherence** over *due* days only, so a Tue/Thu commitment isn't broken
+  by not going on Wednesday. Rates refuse to report at all below a minimum sample —
+  one good day is not "100%".
+- **Weight** if you want it, smoothed with an EMA and reported as a trend, never as
+  today's raw number.
+- **Patterns**, which is the actual point — see below.
 
-> That look is around 14% body fat. For your frame that's about **179 lb** — but here's
-> the honest version: **roughly 15 months**. About 28 weeks of fat loss, then most of a
-> year of eating at maintenance and lifting, because that physique carries more muscle
-> than you do right now. The fat-loss part is the easy half.
->
-> So let's not aim at 15 months. **Twelve weeks, 201 lb.** That's 19 lb, it's very
-> doable, and you'll see it in the mirror. Then we'll talk about the next block.
+## The noticing layer
 
-And when the reference is below the healthy floor, it refuses and counter-offers rather
-than lecturing:
+`core/patterns.mjs` is what separates this from a habit tracker. Each detector refuses
+to speak without a real sample, because a fabricated pattern teaches you that the
+observations are noise — and then the true ones get ignored too.
 
-> That's around 6% body fat. Below roughly 10% is stage-prep territory — it's held for a
-> few weeks, with real hormonal cost, and it's not a place to live. I can get you to lean
-> and keep you there: **175 lb, about 31 weeks.** Want that instead?
-
-Refusing a target is a retention feature, not a compliance tax. It's the moment the
-product proves it isn't lying to you, and it's the thing that separates it from every
-"transform your body in 8 weeks" competitor.
-
-### 2. Don't estimate body fat from photos as a routine feature
-
-Vision estimates of body fat are ±5–8 percentage points. Publishing "you're at 24.3%"
-is precision theater, and it's the number users screenshot and get angry about. Use
-photos in exactly two places: the one-time goal calibration above (as a coarse band,
-never a decimal), and user-initiated progress comparison at **8+ week** gaps, where
-change is actually visible. Weekly progress photos mostly teach people to scrutinize
-themselves.
-
-### 3. "Personal trainer" is the less valuable half — lead with food
-
-For weight management specifically, nutrition is where nearly all the leverage is, and
-training programming is the part that needs equipment, schedule and injury context to
-not be generic slop. Ship nutrition + accountability as *the product*. Ship training as
-three fixed templates chosen by equipment access (none / dumbbells / full gym), with
-progressive overload tracked by text. Don't build an AI programmer in v0 — it triples
-the surface area and it's the half users would forgive you for omitting.
-
-### 4. Let people pick engagement, but make the default direction *down*
-
-Picking a level up front is good. The failure mode is that everyone picks "intense" at
-signup — motivated-day-one self is not the person who has to answer at 9pm on a
-Wednesday — and then churns. So: any level is changeable by text at any time
-("chill out" / "push me harder"), and non-response **auto-downshifts** rather than
-escalating. Two ignored check-ins drops a tier. Nagging is the number one uninstall
-reason for every app in this category, and an SMS product can't be uninstalled quietly —
-it gets reported as spam.
-
-### One more, unprompted: calorie precision doesn't matter as much as you'd think
-
-Both the user's food estimates and our TDEE equation are wrong by 10–20%. Chasing
-input precision is a losing game. Instead the system treats the calorie target as a
-**hypothesis** and the scale as the **measurement**: `engine/trend.mjs` watches the
-smoothed weight trend and moves the target until observed rate matches intended rate.
-After about three weeks it's calibrated to that specific person and the initial error
-stops mattering. This is why the product can afford to accept "chicken burrito bowl,
-regular size" as a log entry and show a *range* rather than a fake-exact 487 kcal.
-
----
-
-## The product
-
-### Onboarding (~2 minutes, 7 turns)
-
-1. **Goal, in their words.** Free text. "I want to not be winded on stairs" is a better
-   goal than a number and the model should keep it and reuse it later.
-2. **Stats.** Height, weight, age, sex at birth (stated plainly: it's what the BMR
-   equation is fitted on), activity level. `engine/units.mjs` parses whatever they text —
-   `5'10`, `178cm`, `185`, `84 kg`.
-3. **Safety check**, framed as 30 seconds, not a medical intake. Age, pregnancy,
-   relevant conditions, and the SCOFF items (see below).
-4. **Engagement tier.**
-5. **Goal photo** (optional, skippable) → calibration → milestone negotiation.
-6. **The plan, stated once, with the reasoning visible.**
-7. **First check-in scheduled.** Ends with a single easy action, not a lecture.
-
-For the 220 lb example the plan lands at maintenance 2695, target **2022 kcal**,
-134g protein / 50g fat / 259g carb, **−1.35 lb/week**.
-
-### Engagement tiers
-
-| Tier | Outbound | Logging ask |
+| Detector | Finds | Won't fire without |
 |---|---|---|
-| **Light** | 1 message/week | Weekly weigh-in only |
-| **Standard** | Morning nudge + evening check-in | Meals when convenient, daily weigh-in |
-| **Intense** | Per-meal prompts, evening review, weekly report | Everything, plus training |
+| `worstWeekday` | The day a commitment keeps dying on | 3+ of that weekday, and a real gap over the commitment's own baseline |
+| `trend` | Adherence slipping or improving | Two comparable 14-day windows |
+| `goalpostMoving` | The same commitment revised easier, repeatedly | 2+ revisions |
+| `silentDrift` | Quiet abandonment — never marked missed, just stopped being mentioned | 4+ unanswered due days |
+| `coMissing` | Two commitments that fail together | 6+ shared due days, and a conditional rate clearing baseline |
 
-All three get the same math. The tier only changes outbound frequency and how much the
-coach asks for. Users can switch by texting.
+`observations()` ranks them and the coach mentions **at most one**. Five observations
+is a dashboard; one well-timed observation is a friend.
 
-### The daily loop
-
-- **Inbound** is unstructured: `"eggs and toast"`, `"183.4"`, `"skipped the gym, work was insane"`,
-  a photo of a plate. The model classifies and routes to a tool. No commands, no syntax.
-- **Food** returns a range and a running budget: *"~450–600. Puts you around 1,400 with
-  dinner to go — you've got room for something real."*
-- **Weight** goes into the EMA, never echoed raw as a judgment.
-- **Misses** get a response calibrated to not moralize. One bad day is noise; the system
-  knows that because it's looking at a 21-day trend, so it can afford to actually mean it.
-- **Weekly**: trend, adherence, and — at most every 14 days — a target adjustment with the
-  reason attached.
-
----
+`goalpostMoving` is the one I'd point at. Revising a commitment isn't hidden or
+punished — it's recorded, and repeated easing gets said out loud once, plainly: the
+commitment is probably wrong, not you. That's a thing a real accountability partner
+does and a habit app never will.
 
 ## Architecture
 
 ```
-SMS/WhatsApp (Twilio) → webhook → orchestrator → LLM w/ tools → Postgres
-                                       ↑
-                              scheduler (cron) for outbound check-ins
+cli.mjs ──▶ channels/adapter.mjs ──▶ core/coach.mjs ──▶ Claude (tools)
+                                          │
+                                          ▼
+                      core/{accountability,patterns,tools,store}.mjs
+                      engine/{trend,units,energy,safety}.mjs
 ```
 
-The load-bearing decision: **the model is the interface, not the brain.** Every number
-comes from `engine/`, a pure, deterministic, unit-tested module. The model chooses
-*when* to call it and *how to say the answer out loud*; it never computes a calorie
-target and never sees a path around a safety block.
+Same stance as the original design: **the model is the interface, not the brain.** It
+decides when to call a tool and how to phrase the answer; it never computes a streak,
+an adherence rate, or a trend. Those come from pure, tested functions. The system
+prompt says it explicitly — *never state a streak or a rate from memory* — but the
+guarantee is architectural, not a prompt instruction, because you can't prompt your
+way to one.
 
-This isn't fussiness. An LLM that invents "1,150 calories" for a 200 lb man because the
-conversation had momentum is the single most dangerous failure mode in this product,
-and the fix has to be architectural — you cannot prompt your way to a guarantee. The
-engine's floors (`max(BMR, 1200/1500)`), deficit cap (25% of TDEE), and rate cap
-(1%/week) hold regardless of what the conversation does.
+**The channel seam is real.** `channels/adapter.mjs` gives you `handle(text)`,
+`nudge()`, and `status()`. To add Telegram or SMS you write a file that creates a
+session, calls `handle` on each inbound message, and calls `nudge` on a schedule.
+There is nothing else to implement, and no coach logic belongs in a channel.
 
-### Tool surface
+### API notes
 
-| Tool | Notes |
-|---|---|
-| `log_food(description, photo?)` | Returns a **range**, plus remaining budget |
-| `log_weight(kg)` | Feeds the EMA; returns trend, not raw delta |
-| `log_activity(description)` | Adjusts nothing directly — see below |
-| `get_status()` | Today's budget, week's trend, streak |
-| `build_plan(profile)` | The only source of a calorie number |
-| `calibrate_goal(estimate)` | Goal-photo flow; can refuse |
-| `propose_adjustment()` | Rate-limited to once per 14 days |
-| `set_engagement(tier)` | User-initiated or auto-downshift |
-| `escalate(reason)` | Halts coaching, delivers referral copy |
+`claude-opus-5`, adaptive thinking left on at `effort: "low"` — low effort is
+unusually strong on this model and is the right latency/cost lever for a chat app.
+Thinking is deliberately *not* disabled: with thinking off, Opus 5 can emit a tool
+call as plain text, which completes the turn while silently doing nothing. `max_tokens`
+is 8192 because thinking shares that budget. The system prompt is cached
+(`cache_control`), and `stop_reason` is checked before the content array is read.
 
-`log_activity` deliberately does *not* add calories back to the budget. Exercise
-expenditure is the most over-reported number in fitness tracking, it's already inside
-the activity multiplier, and "earning back" calories is a mechanic worth not teaching.
+The loop is hand-written rather than using the SDK's beta tool runner — for a
+single-file personal tool, owning ~25 lines beats taking a beta dependency.
 
-### Data model (sketch)
+## Tests
 
-```
-users        id, phone, tz, tier, created_at, state
-profiles     user_id, height_cm, weight_kg, age, sex, activity, conditions[],
-             screening_result, screened_at
-targets      user_id, kcal, protein_g, fat_g, carb_g, rate_pct, effective_from,
-             reason, superseded_by
-weights      user_id, date, weight_kg           -- trend is derived, never stored
-food_logs    user_id, ts, raw_text, kcal_low, kcal_high, confidence
-messages     user_id, direction, body, tool_calls, ts
-events       user_id, type, payload, ts         -- escalations, tier changes, adjustments
-```
+76, no network and no API key required.
 
-Photos are **not** in the schema. Goal photos are held in memory for the duration of the
-calibration call and dropped (`photoRetention: 'discard_after_estimate'`, enforced in
-the storage layer rather than by the model remembering to). Progress photos, when added,
-belong in separate encrypted blob storage with independent deletion — health data plus
-body photos plus a phone number is about the most sensitive tuple a consumer product can
-hold, and it needs to be deletable in one text.
+- `engine/test.mjs` (38) — the numeric core carried over from the original design:
+  BMR/TDEE, calorie floors and deficit caps, weight EMA, plateau detection, screening
+  gates. Most of it is dormant in this build; the floors and trend maths are live.
+- `core/test.mjs` (30) — cadence and due-dates, streaks (including that `skipped` is
+  neutral in both directions — that was a real bug the test caught), adherence
+  minimums, every pattern detector including its refusal cases, tool dispatch.
+- `core/loop.test.mjs` (8) — the agentic loop against a stubbed client: tool dispatch,
+  `tool_use_id` round-tripping, parallel tool calls returned in one message, refusal
+  handling, the runaway-loop guard, persistence across restarts.
 
----
+## Not built
 
-## Safety spec
+No Telegram/SMS channel yet (the seam is there). No scheduler — `cli.mjs nudge` is
+cron-ready but nothing schedules it. No photo handling. No food logging beyond
+free-text notes. Nothing from `DESIGN.md`'s goal-photo calibration flow is wired in,
+though `engine/calibrate.mjs` still passes its tests if you want it back.
 
-Implemented in `engine/safety.mjs`, run before any deficit talk and re-run on every
-profile change. Blocks are not overridable by conversation.
+## A caveat worth keeping
 
-**Hard blocks (no coaching):**
-- Under 18.
-- SCOFF ≥ 2, or disclosed eating-disorder history. The correct product response is to
-  stop selling weight loss and hand over a referral — not to make a clinical claim, and
-  not to coach carefully.
-
-**Soft blocks (maintenance mode, not a closed door):**
-- BMI < 18.5 with a loss goal.
-- Pregnant or breastfeeding with a loss goal.
-
-**Cautions (slower cap, 0.5%/week):**
-- BMI 18.5–20 with a loss goal → recomposition is suggested instead.
-- Age 65+ → muscle and bone retention take priority.
-- Clinical flags: insulin/sulfonylurea, GLP-1 agonists, kidney disease, cardiac
-  conditions, post-bariatric. GLP-1 users in particular are a growing share of this
-  market and their risk is *under*-eating and lean-mass loss, so the coaching inverts.
-
-**Target gates:** goal body fat below 10% (male) / 18% (female), or a goal weight under
-18.5 BMI, is refused with a counter-offer.
-
-**Ongoing:** sustained loss >1.5%/week and >1.75× prescribed triggers an interrupt —
-that pattern is either large under-reporting or something medical, and both are worth
-stopping the program for.
-
-### On the SCOFF questions
-
-They're blunt ("do you ever make yourself sick because you feel uncomfortably full?")
-and there's a real argument they'll cost signups. I'd still ship them, in onboarding,
-before any number is quoted. Screening after someone's invested in a plan is worse for
-them and worse for you, and it's a two-item threshold on a validated instrument — this
-is the cheapest possible version of doing it properly. If product pushes back, the
-compromise I'd accept is asking three of the five and monitoring conversation signals
-for the rest; I would not accept dropping it.
-
----
-
-## What to measure
-
-Not weight lost. Selection bias makes it meaningless — the people still reporting at
-week 12 are the people it worked for.
-
-- **D7 / D30 logging adherence** — the actual leading indicator, and the thing this
-  product is trying to buy with low friction.
-- **Response rate to outbound**, per tier. This is how you detect nagging before it
-  becomes spam reports.
-- **Weigh-in capture rate** — below ~3/week the feedback loop can't calibrate.
-- **Tier migration** — down-migration is healthy signal, not failure.
-- **Time-to-first-log** after onboarding.
-- **Escalation rate**, reviewed by a human, every one.
-
-## Cost
-
-Per active user per month, roughly: LLM 100–250 messages with vision on a slice, call it
-**$0.60–1.50**; SMS at ~$0.008/segment two-way, **$1.50–3.00** at Standard tier (WhatsApp
-is materially cheaper and should be the default where it has share). So **$2–5/user/mo**
-of variable cost. Note that Intense tier can cost 3× Light while a flat price doesn't
-move — worth pricing tiers separately or capping outbound.
-
-## Scope
-
-**In v0:** SMS onboarding, screening, plan generation, food/weight logging, trend-based
-adjustment, three engagement tiers, goal-photo calibration, weekly review.
-
-**Not in v0:** training programming beyond three templates, barcode/food database
-integration, macro micro-management, social features, wearable sync, a companion app,
-recipes, meal plans. Meal plans in particular sound essential and aren't — adherence to
-a prescribed plan is worse than adherence to a budget you spend yourself.
-
-## Open questions
-
-1. **Regulatory posture.** This is wellness, not a medical device, but the GLP-1 and
-   diabetes cohorts push toward clinical territory. Worth a lawyer before launch, not after.
-2. **What happens at goal.** Maintenance is the hardest phase and where every product
-   abandons people. It may also be the only defensible retention story.
-3. **Human in the loop.** A dietitian reviewing escalations and a sample of conversations
-   is the highest-leverage safety spend and probably affordable at small scale.
-4. **WhatsApp vs SMS** depends on geography; template-message rules materially constrain
-   proactive check-ins on WhatsApp and that should be checked before committing.
-
-## Running the engine
-
-```bash
-node trainer/engine/test.mjs   # 38 tests, no dependencies
-```
-
-`engine/units.mjs` parsing · `energy.mjs` BMR/TDEE/targets/macros · `trend.mjs` EMA,
-observed rate, adjustment, plateau · `safety.mjs` screening and gates ·
-`calibrate.mjs` goal-photo flow · `index.mjs` `buildPlan()`.
+This is built for one person who chose it. The screening logic in `engine/safety.mjs`
+still exists and still works, but nothing in the accountability flow calls it — that's
+fine for personal use and would **not** be fine if you ever handed this to someone
+else. If this stops being just yours, re-read `DESIGN.md` first.
